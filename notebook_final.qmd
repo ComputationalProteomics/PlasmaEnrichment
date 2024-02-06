@@ -200,7 +200,7 @@ figure1 <- ggplot() +
   theme(axis.text.x = element_text(angle = 45,hjust = 1),legend.position = 'none')+
   xlab('')
 
-ggsave(filename = 'Figure1.tiff',plot = figure1,device = 'tiff',path = 'Figures/',dpi = 600,units = 'in',width = 7,height = 5,compression = 'lzw')
+ggsave(filename = 'Figure1.pdf',plot = figure1,device = 'pdf',path = 'Figures/',dpi = 1200,units = 'cm',width = 17,compress=TRUE)
 
 figure1
 ```
@@ -221,6 +221,7 @@ URL to re-execute query: https://db.systemsbiology.net/sbeams/cgi/shortURL?key=b
 data <- read_tsv(file = 'individual-cims/rt-normalisation/cims+plasma/cims-pep-normalisation/cycloess-sorted.tsv')
 design <- read_tsv('individual-cims/design_individual.tsv')
 concData <- read_tsv(file = 'plasma_concentration_peptideatlas.tsv')
+concData <- concData %>% arrange(estimated_ng_per_ml) %>% mutate(Rank=1:nrow(.))
 
 designConc <- design %>% 
   mutate(.after = group, Experiment = str_extract(group,pattern='[:alpha:]{2,6}'))
@@ -276,7 +277,7 @@ onlyPlasma <- dataLonger %>%
   unique
 
 PlasmaFiltered <- concData %>% 
-  dplyr::select(biosequence_name,estimated_ng_per_ml) %>% 
+  dplyr::select(biosequence_name,estimated_ng_per_ml,Rank) %>% 
   filter(biosequence_name %in% onlyPlasma) %>% 
   mutate(Group='Plasma')
 
@@ -287,7 +288,7 @@ onlyCims <- dataLonger %>%
   unlist %>% 
   unique
 cimsFiltered <- concData %>% 
-  dplyr::select(biosequence_name,estimated_ng_per_ml) %>%
+  dplyr::select(biosequence_name,estimated_ng_per_ml,Rank) %>%
   filter(biosequence_name %in% onlyCims) %>% 
   mutate(Group='CIMS')
 
@@ -295,11 +296,11 @@ concDataFinal <- bind_rows(PlasmaFiltered,cimsFiltered)
 
 figure2 <- ggplot() + 
   geom_point(data = concData,
-             mapping = aes(x = fct_reorder(.f = biosequence_name,.x = -log10(estimated_ng_per_ml),.na_rm = FALSE),
+             mapping = aes(x = -Rank,
                            y = log10(estimated_ng_per_ml),
                            fill = 'PeptideAtlas Human Plasma 2023-04'),color='black',alpha=0.5,shape=21,size=5) +
   geom_point(data = concDataFinal,
-             mapping = aes(x = fct_reorder(.f = biosequence_name,.x = -log10(estimated_ng_per_ml),.na_rm = FALSE),
+             mapping = aes(x = -Rank,
                            y = log10(estimated_ng_per_ml),
                            fill = Group),color='black',alpha=0.5,shape=21,size=5) +
   facet_wrap(facets = ~factor(Group,levels = c('Plasma','CIMS'),labels = c(Plasma='A',CIMS='B')),ncol = 2) + 
@@ -307,7 +308,7 @@ figure2 <- ggplot() +
                     aesthetics = 'fill',
                     breaks = c('PeptideAtlas Human Plasma 2023-04','Plasma', 'CIMS'),
                     values = c('PeptideAtlas Human Plasma 2023-04' = 'black','Plasma' = 'red', 'CIMS' = 'blue')) +
-  scale_x_discrete(labels = NULL,
+  scale_x_continuous(labels = NULL,
                    breaks = NULL) + 
   labs(x = 'Rank', 
        y = 'Log10( Estimated conc. ng/mL )') +
@@ -318,7 +319,7 @@ figure2 <- ggplot() +
         axis.title.y = element_text(face = 'bold'),
         legend.title = element_text(face = 'bold'))
 
-ggsave(filename = 'Figure2.tiff',plot = figure2,device = 'tiff',path = 'Figures/',units = 'in',width = 10,height = 10,dpi = 600,compression = 'lzw')
+ggsave(filename = 'Figure2.pdf',plot = figure2,device = 'pdf',path = 'Figures/',units = 'cm',width = 17,dpi = 1200,compress = TRUE)
 
 figure2
 ```
@@ -364,7 +365,7 @@ cimsOrder <-  design %>% dplyr::filter(str_detect(group, 'CIMS|NC')) %>% select(
 
 figure3 <- upset(data = dataUpset,intersect = cimsOrder,width_ratio = 0.1,height_ratio = 0.8,min_degree=1,min_size=5,name = '')
 
-ggsave(filename = 'Figure3.tiff',plot = figure3,device = 'tiff',path = 'Figures/',dpi = 600,units = 'in',width = 20,height = 15,compression = 'lzw')
+ggsave(filename = 'Figure3.pdf',plot = figure3,device = 'pdf',path = 'Figures/',dpi = 1200,units = 'in',width = 20,height = 15,compress = TRUE)
 
 figure3
 ```
@@ -419,7 +420,7 @@ figure4 <- ggplot(dataCVFinal) +
   xlab('')+
   theme(axis.text.x = element_text(angle = 30))+
   theme_pubr(x.text.angle = 30)
-ggsave(filename = 'Figure4.tiff',plot = figure4,device = 'tiff',path = 'Figures/',dpi = 600,units = 'in',width = 15,height = 10,compression = 'lzw')
+ggsave(filename = 'Figure4.pdf',plot = figure4,device = 'pdf',path = 'Figures/',dpi = 1200,units = 'cm',width = 17,compress = TRUE)
 
 figure4
 ```
@@ -473,7 +474,7 @@ upsetMix3 <- upset(data = dataUpset,intersect = mix3,width_ratio = 0.1,height_ra
 
 figure5 <- cowplot::plot_grid(upsetMix1,upsetMix2,upsetMix3,align = 'v',nrow = 3,ncol = 1,labels = c('A','B','C'))
 
-ggsave(filename = 'Figure5.tiff',plot = figure5,device = 'tiff',path = 'Figures/',units = 'in',width = 20,height = 20,dpi = 600,compression = 'lzw')
+ggsave(filename = 'Figure5.pdf',plot = figure5,device = 'pdf',path = 'Figures/',units = 'in',width = 20,height = 20,dpi = 1200,compress=TRUE)
 
 figure5
 ```
