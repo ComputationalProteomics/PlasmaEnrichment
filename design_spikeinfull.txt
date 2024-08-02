@@ -1,0 +1,17 @@
+sample	group
+full_1-1	L0
+full_1-2	L0
+full_1-3	L0
+full_1-4	L0
+full_2-1	L1
+full_2-2	L1
+full_2-3	L1
+full_2-4	L1
+full_3-1	L2
+full_3-2	L2
+full_3-3	L2
+full_3-4	L2
+full_4-1	L4
+full_4-2	L4
+full_4-3	L4
+full_4-4	L4
