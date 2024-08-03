@@ -1,0 +1,84 @@
+---
+title: "Spike-in Experiment"
+author:
+  name: "Fredrik Levander"
+  name: "Sergio Mosquim Junior"
+format:
+    html:
+        code-fold: true
+        code-tools: true
+        embed-resources: true
+        number-sections: true
+        smooth-scroll: true
+        theme: cosmo
+        toc-depth: 2
+        toc-location: left
+        toc: true
+        warning: false
+engine: knitr
+---
+
+# Libraries
+```{r}
+# Preprocessing
+library(NormalyzerDE)
+library(tidyverse,warn.conflicts = FALSE)
+```
+
+# Paths
+```{r}
+dataP <- 'spikeinmixes/spikeinsfullmix-report.pr_matrix.tsv'
+designP <- 'spikeinmixes/design_spikeinboth.txt'
+dataCleanP <- 'spikeinmixes/spikeinboth_clean.tsv'
+jobName <- 'spikeinboth-pep-normalisation'
+outputP <- 'spikeinmixes'
+jDEName <- "spike-in level comparisons both"
+jDENameFull <- "spike-in level comparisons both"
+normalizedDataP <- paste(outputP,jobName,'CycLoess-normalized.txt',sep="/")
+```
+
+# Peptide data cleaning
+```{r}
+#| message: false
+
+data <- read_tsv(dataP) %>% 
+  filter(str_detect(string = Protein.Group,pattern = '^Cont\\_{1}[:alnum:]{6}(?!\\;)',negate = TRUE))
+
+headers <- colnames(data)
+headers <- str_replace(headers, ".+\\\\240618_GPS_","")
+headers <- str_replace(headers,".mzML.+","")
+colnames(data) <- headers
+
+write_tsv(x = data,file = dataCleanP)
+```
+
+# Peptide-level Normalization
+```{r}
+
+normalyzer(jobName = jobName,designPath = designP,dataPath = dataCleanP,outputDir = outputP,normalizeRetentionTime = FALSE,zeroToNA = TRUE,sampleColName = 'sample',groupColName = 'group',requireReplicates = FALSE)
+```
+
+# Peptide-level-comparisons used for generating box-plots
+```{r}
+comparisons <- c("L4-L0","L2-L0","L1-L0","L2-L0","L1-L0","L4-L2","L4-L1","L2-L1","F4-F0","F2-F0","F4-F1")
+
+normalyzerDE(jDEName, designPath = designP, dataPath = normalizedDataP, outputDir = outputP, comparisons = comparisons, logTrans = FALSE, sigThres = 0.05, leastRepCount = 0)
+
+```
+
+## Split comparisons used for generating vulcano plots after loading the two datasets in omicloupe
+```{r}
+designMixP <- 'spikeinmixes/design_spikeinmixes.txt'
+designFullP <- 'spikeinmixes/design_spikeinfull.txt'
+jobName <- 'spikeinboth-pep-normalisation'
+outputP <- 'spikeinmixes'
+jDENameMix <- "spike-in level comparisons split mixes"
+jDENameFull <- "spike-in level comparisons split full"
+normalizedDataP <- paste(outputP,jobName,'CycLoess-normalized.txt',sep="/")
+
+comparisons <- c("L4-L0","L2-L0","L1-L0","L2-L0","L1-L0","L4-L2","L4-L1","L2-L1")
+
+normalyzerDE(jDENameFull, designPath = designFullP, dataPath = normalizedDataP, outputDir = outputP, comparisons = comparisons, logTrans = FALSE, sigThres = 0.05, leastRepCount = 1)
+
+normalyzerDE(jDENameMix, designPath = designMixP, dataPath = normalizedDataP, outputDir = outputP, comparisons = comparisons, logTrans = FALSE, sigThres = 0.05, leastRepCount = 1)
+```
